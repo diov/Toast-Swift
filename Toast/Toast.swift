@@ -250,11 +250,16 @@ public extension UIView {
     
      @param position The toast's position
      */
-    func makeToastActivity(_ position: ToastPosition) {
+    func makeToastActivity(_ position: ToastPosition, message: String? = nil) {
         // sanity
         guard objc_getAssociatedObject(self, &ToastKeys.activityView) as? UIView == nil else { return }
-        
-        let toast = createToastActivityView()
+
+        let toast: UIView
+        if let message = message {
+            toast = createToastActivityMessageView(message: message)
+        } else {
+            toast = createToastActivityView()
+        }
         let point = position.centerPoint(forToast: toast, inSuperview: self)
         makeToastActivity(toast, point: point)
     }
@@ -278,7 +283,7 @@ public extension UIView {
         let toast = createToastActivityView()
         makeToastActivity(toast, point: point)
     }
-    
+
     /**
      Dismisses the active toast activity indicator view.
      */
@@ -331,7 +336,58 @@ public extension UIView {
         
         return activityView
     }
-    
+
+    private func createToastActivityMessageView(message: String) -> UIView {
+        let style = ToastManager.shared.style
+
+        let activityView = UIView()
+        activityView.backgroundColor = style.activityBackgroundColor
+        activityView.autoresizingMask = [.flexibleLeftMargin, .flexibleRightMargin, .flexibleTopMargin, .flexibleBottomMargin]
+        activityView.layer.cornerRadius = style.cornerRadius
+
+        if style.displayShadow {
+            activityView.layer.shadowColor = style.shadowColor.cgColor
+            activityView.layer.shadowOpacity = style.shadowOpacity
+            activityView.layer.shadowRadius = style.shadowRadius
+            activityView.layer.shadowOffset = style.shadowOffset
+        }
+
+        let activityIndicatorView = UIActivityIndicatorView(style: .whiteLarge)
+        activityIndicatorView.color = style.activityIndicatorColor
+        activityIndicatorView.startAnimating()
+
+        let indicatorRect = CGRect(x: style.horizontalPadding, y: style.verticalPadding, width: activityIndicatorView.bounds.size.width, height: activityIndicatorView.bounds.size.height)
+        activityIndicatorView.frame = indicatorRect
+
+        let messageLabel = UILabel()
+        messageLabel.text = message
+        messageLabel.numberOfLines = style.messageNumberOfLines
+        messageLabel.font = style.messageFont
+        messageLabel.textAlignment = style.messageAlignment
+        messageLabel.lineBreakMode = .byTruncatingTail;
+        messageLabel.textColor = style.messageColor
+        messageLabel.backgroundColor = UIColor.clear
+
+        let maxMessageSize = CGSize(width: self.bounds.size.height * style.maxWidthPercentage, height: self.bounds.size.height * style.maxHeightPercentage)
+        let messageSize = messageLabel.sizeThatFits(maxMessageSize)
+        let actualWidth = min(messageSize.width, maxMessageSize.width)
+        let actualHeight = min(messageSize.height, maxMessageSize.height)
+        let messageRect = CGRect(x: indicatorRect.width + style.horizontalPadding * 2, y: style.verticalPadding + (indicatorRect.height - actualHeight) / 2.0, width: actualWidth, height: actualHeight)
+        messageLabel.frame = messageRect
+
+        let longerWidth = max(indicatorRect.width, messageRect.width)
+        let longerX = max(indicatorRect.origin.x, messageRect.origin.x)
+        let wrapperWidth = max((indicatorRect.width + (style.horizontalPadding * 2.0)), (longerX + longerWidth + style.horizontalPadding))
+        let wrapperHeight = max((messageRect.origin.y + messageRect.size.height + style.verticalPadding), (indicatorRect.height + (style.verticalPadding * 2.0)))
+
+        activityView.addSubview(activityIndicatorView)
+        activityView.addSubview(messageLabel)
+
+        activityView.frame = CGRect(x: 0.0, y: 0.0, width: wrapperWidth, height: wrapperHeight)
+
+        return activityView
+    }
+
     // MARK: - Private Show/Hide Methods
     
     private func showToast(_ toast: UIView, duration: TimeInterval, point: CGPoint) {
