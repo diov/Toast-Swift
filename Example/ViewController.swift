@@ -205,7 +205,7 @@ extension ViewController {
         case 8:
             // Make toast activity
             if !showingActivity {
-                self.navigationController?.view.makeToastActivity(.center, message: "Please wait for receipt confirmed!")
+                self.navigationController?.view.makeToastActivity(.center, message: "Please Wait. We Are Processing Your Order...")
             } else {
                 self.navigationController?.view.hideToastActivity()
             }

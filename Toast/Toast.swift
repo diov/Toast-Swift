@@ -368,7 +368,7 @@ public extension UIView {
         messageLabel.textColor = style.messageColor
         messageLabel.backgroundColor = UIColor.clear
 
-        let maxMessageSize = CGSize(width: self.bounds.size.height * style.maxWidthPercentage, height: self.bounds.size.height * style.maxHeightPercentage)
+        let maxMessageSize = CGSize(width: self.bounds.size.width * style.maxWidthPercentage, height: self.bounds.size.height * style.maxHeightPercentage)
         let messageSize = messageLabel.sizeThatFits(maxMessageSize)
         let actualWidth = min(messageSize.width, maxMessageSize.width)
         let actualHeight = min(messageSize.height, maxMessageSize.height)
