@@ -287,13 +287,14 @@ public extension UIView {
     /**
      Dismisses the active toast activity indicator view.
      */
-    func hideToastActivity() {
+    func hideToastActivity(handler: (() -> Void)? = nil) {
         if let toast = objc_getAssociatedObject(self, &ToastKeys.activityView) as? UIView {
             UIView.animate(withDuration: ToastManager.shared.style.fadeDuration, delay: 0.0, options: [.curveEaseIn, .beginFromCurrentState], animations: {
                 toast.alpha = 0.0
             }) { _ in
                 toast.removeFromSuperview()
                 objc_setAssociatedObject(self, &ToastKeys.activityView, nil, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+                handler?()
             }
         }
     }
@@ -372,14 +373,15 @@ public extension UIView {
         let messageSize = messageLabel.sizeThatFits(maxMessageSize)
         let actualWidth = min(messageSize.width, maxMessageSize.width)
         let actualHeight = min(messageSize.height, maxMessageSize.height)
-        let messageRect = CGRect(x: indicatorRect.width + style.horizontalPadding * 2, y: style.verticalPadding + (indicatorRect.height - actualHeight) / 2.0, width: actualWidth, height: actualHeight)
+        let messageRect = CGRect(x: indicatorRect.width + style.horizontalPadding * 2, y: style.verticalPadding + max(indicatorRect.height - actualHeight, 0) / 2.0, width: actualWidth, height: actualHeight)
         messageLabel.frame = messageRect
 
         let longerWidth = max(indicatorRect.width, messageRect.width)
         let longerX = max(indicatorRect.origin.x, messageRect.origin.x)
         let wrapperWidth = max((indicatorRect.width + (style.horizontalPadding * 2.0)), (longerX + longerWidth + style.horizontalPadding))
-        let wrapperHeight = max((messageRect.origin.y + messageRect.size.height + style.verticalPadding), (indicatorRect.height + (style.verticalPadding * 2.0)))
+        let wrapperHeight = max(indicatorRect.height, messageRect.height) + (style.verticalPadding * 2.0)
 
+        activityIndicatorView.center = CGPoint(x: indicatorRect.width / 2.0 + style.horizontalPadding, y: wrapperHeight / 2.0)
         activityView.addSubview(activityIndicatorView)
         activityView.addSubview(messageLabel)
 
